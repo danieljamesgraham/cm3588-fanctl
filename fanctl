@@ -64,4 +64,5 @@ while True:
     temp = read_temp()
     speed = calc_fanspeed(temp)
     set_fanspeed(speed)
+    # print(temp, speed)
     time.sleep(2)
