@@ -3,7 +3,7 @@
 import time
 from pathlib import Path
 
-LO_TEMP = 55  # deg C
+LO_TEMP = 60  # deg C
 HI_TEMP = 70  # deg C
 HYSTERESIS = 5  # deg C
 
