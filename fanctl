@@ -3,15 +3,17 @@
 import time
 from pathlib import Path
 
-LO_SPEED = 20
 LO_TEMP = 55
+HI_TEMP = 70
+HYSTERESIS = 5
 
+LO_SPEED = 10
 HI_SPEED = 100
-HI_TEMP = 75
 
-PERIOD = 40000
-
+PERIOD = 40000  # ns
 PWM = "/sys/class/pwm/pwmchip0/pwm0"
+
+current_speed = 0
 
 def write(path, value):
     with open(path, "w") as file:
@@ -19,7 +21,7 @@ def write(path, value):
 
 def init():
     if not Path(PWM).exists():
-        write(f"{PWMCHIP}/export", 0)
+        write("/sys/class/pwm/pwmchip0/export", 0)
         time.sleep(0.1)
 
     write(f"{PWM}/period", PERIOD)
@@ -31,17 +33,25 @@ def read_temp():
     with open("/sys/devices/virtual/thermal/thermal_zone0/temp", "r") as file:
         return int(file.read()) / 1000
 
-def set_fanspeed(speed):
-    duty = int(PERIOD - (PERIOD * (speed/100)))
+def set_fanspeed(speed_percent):
+    duty = int(PERIOD * speed_percent / 100)
     write(f"{PWM}/duty_cycle", duty)
 
 def calc_fanspeed(temp):
+    global current_speed
+
     if temp > HI_TEMP:
-        return HI_SPEED
+        current_speed = HI_SPEED
+    elif temp > HI_TEMP - HYSTERESIS and current_speed == HI_SPEED:
+        pass
     elif temp > LO_TEMP:
-        return LO_SPEED + (((temp - LO_TEMP) / (HI_TEMP - LO_TEMP)) * (HI_SPEED - LO_SPEED))
+        current_speed = LO_SPEED
+    elif temp > LO_TEMP - HYSTERESIS and current_speed == LO_SPEED:
+        pass
     else:
-        return 0
+        current_speed = 0
+
+    return current_speed
 
 if not Path(f"{PWM}/duty_cycle").exists():
     init()
