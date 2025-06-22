@@ -13,7 +13,7 @@ PERIOD = 40000  # ns
 
 TEMP = "/sys/devices/virtual/thermal/thermal_zone0/temp"
 PWMCHIP = "/sys/class/pwm/pwmchip0"
-PWM = f"{PWMCHIP}/pwm0"
+FANPWM = f"{PWMCHIP}/pwm0"
 
 current_speed = 0
 
@@ -22,14 +22,14 @@ def write(path, value):
         file.write(str(value))
 
 def init():
-    if not Path(PWM).exists():
-        write("/sys/class/pwm/pwmchip0/export", 0)
+    if not Path(FANPWM).exists():
+        write(f"{PWMCHIP}/export", 0)
         time.sleep(0.1)
 
-    write(f"{PWM}/period", PERIOD)
-    write(f"{PWM}/polarity", "normal")
-    write(f"{PWM}/enable", 1)
-    write(f"{PWM}/duty_cycle", PERIOD)
+    write(f"{FANPWM}/period", PERIOD)
+    write(f"{FANPWM}/polarity", "normal")
+    write(f"{FANPWM}/enable", 1)
+    write(f"{FANPWM}/duty_cycle", PERIOD)
 
 def read_temp():
     with open(TEMP, "r") as file:
@@ -53,9 +53,9 @@ def calc_fanspeed(temp):
 
 def set_fanspeed(speed):
     duty = int(PERIOD - (PERIOD * speed / 100))
-    write(f"{PWM}/duty_cycle", duty)
+    write(f"{FANPWM}/duty_cycle", duty)
 
-if not Path(f"{PWM}/duty_cycle").exists():
+if not Path(f"{FANPWM}/duty_cycle").exists():
     init()
 
 while True:
