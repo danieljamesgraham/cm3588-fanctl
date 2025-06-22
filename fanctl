@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+import time
+from pathlib import Path
+
+LO_SPEED = 20
+LO_TEMP = 55
+
+HI_SPEED = 100
+HI_TEMP = 75
+
+PERIOD = 40000
+
+PWM = "/sys/class/pwm/pwmchip0/pwm0"
+
+def write(path, value):
+    with open(path, "w") as file:
+        file.write(str(value))
+
+def init():
+    if not Path(PWM).exists():
+        write(f"{PWMCHIP}/export", 0)
+        time.sleep(0.1)
+
+    write(f"{PWM}/period", PERIOD)
+    write(f"{PWM}/polarity", "normal")
+    write(f"{PWM}/enable", 1)
+    write(f"{PWM}/duty_cycle", 0)
+
+def read_temp():
+    with open("/sys/devices/virtual/thermal/thermal_zone0/temp", "r") as file:
+        return int(file.read()) / 1000
+
+def set_fanspeed(speed):
+    duty = int(PERIOD - (PERIOD * (speed/100)))
+    write(f"{PWM}/duty_cycle", duty)
+
+def calc_fanspeed(temp):
+    if temp > HI_TEMP:
+        return HI_SPEED
+    elif temp > LO_TEMP:
+        return LO_SPEED + (((temp - LO_TEMP) / (HI_TEMP - LO_TEMP)) * (HI_SPEED - LO_SPEED))
+    else:
+        return 0
+
+if not Path(f"{PWM}/duty_cycle").exists():
+    init()
+
+while True:
+    temp = read_temp()
+    speed = calc_fanspeed(temp)
+    set_fanspeed(speed)
+    time.sleep(2)
