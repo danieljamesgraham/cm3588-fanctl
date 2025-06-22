@@ -22,14 +22,11 @@ def write(path, value):
         file.write(str(value))
 
 def init():
-    if not Path(FANPWM).exists():
-        write(f"{PWMCHIP}/export", 0)
-        time.sleep(0.1)
-
+    write(f"{PWMCHIP}/export", 0)
+    time.sleep(0.1)
     write(f"{FANPWM}/period", PERIOD)
-    write(f"{FANPWM}/polarity", "normal")
-    write(f"{FANPWM}/enable", 1)
     write(f"{FANPWM}/duty_cycle", PERIOD)
+    write(f"{FANPWM}/enable", 1)
 
 def read_temp():
     with open(TEMP, "r") as file:
