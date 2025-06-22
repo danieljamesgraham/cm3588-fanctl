@@ -33,8 +33,8 @@ def read_temp():
     with open("/sys/devices/virtual/thermal/thermal_zone0/temp", "r") as file:
         return int(file.read()) / 1000
 
-def set_fanspeed(speed_percent):
-    duty = int(PERIOD * speed_percent / 100)
+def set_fanspeed(speed):
+    duty = int(PERIOD - (PERIOD * speed / 100))
     write(f"{PWM}/duty_cycle", duty)
 
 def calc_fanspeed(temp):
